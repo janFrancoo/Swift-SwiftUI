@@ -34,6 +34,7 @@ class ViewController: UIViewController, ASAuthorizationControllerDelegate {
                            relatedBy: NSLayoutConstraint.Relation.equal,
                            toItem: view, attribute: NSLayoutConstraint.Attribute.centerY,
                            multiplier: 1, constant: 0).isActive = true
+        
     }
     	
     @objc func handleAppleIdRequest() {
@@ -48,30 +49,24 @@ class ViewController: UIViewController, ASAuthorizationControllerDelegate {
     func authorizationController(controller: ASAuthorizationController, didCompleteWithAuthorization authorization: ASAuthorization) {
         if let appleIDCredential = authorization.credential as?  ASAuthorizationAppleIDCredential {
             let userIdentifier = appleIDCredential.user
-            let email = appleIDCredential.email
-            checkCredentials(userID: userIdentifier, email: email)
+            print(userIdentifier, String(decoding: appleIDCredential.identityToken!, as: UTF8.self))
+            // send id token to api
+            checkCredentials(userID: userIdentifier)
         }
     }
     
-    func checkCredentials(userID: String, email: String?) {
+    func checkCredentials(userID: String) {
         let appleIDProvider = ASAuthorizationAppleIDProvider()
         appleIDProvider.getCredentialState(forUserID: userID) {  (credentialState, error) in
              switch credentialState {
                 case .authorized:
                     print("valid")
-                    if email != nil {
-                        // send just id for check
-                    } else {
-                        // send both id and email for first time reg
-                    }
                     break
                 case .revoked:
                     print("revoked")
-                    // throw alert
                     break
                 case .notFound:
                     print("not found")
-                    // throw alert
                     break
                 default:
                     break
@@ -83,3 +78,4 @@ class ViewController: UIViewController, ASAuthorizationControllerDelegate {
         // throw alert
     }
 }
+
