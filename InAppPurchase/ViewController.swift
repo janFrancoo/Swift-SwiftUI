@@ -28,6 +28,8 @@ class ViewController: UIViewController, SKProductsRequestDelegate, SKPaymentTran
     }
     
     @IBAction func purchaseCoins(_ sender: Any) {
+        // this func must be called after product response
+        // can be guarded, just an ex
         productIndex = 0
         purchaseMyProduct(validProducts[productIndex])
     }
@@ -56,6 +58,7 @@ class ViewController: UIViewController, SKProductsRequestDelegate, SKPaymentTran
                     SKPaymentQueue.default().finishTransaction(transaction as! SKPaymentTransaction)
                     if productIndex == 0 {
                         print("You've bought 2000 coins!")
+                        fetchReceipt()
                     }
                     break
                 case .failed:
@@ -87,6 +90,20 @@ class ViewController: UIViewController, SKProductsRequestDelegate, SKPaymentTran
         
     func paymentQueueRestoreCompletedTransactionsFinished(_ queue: SKPaymentQueue) {
         print("The Payment was successfull!")
+    }
+    
+    func fetchReceipt() {
+        if let appStoreReceiptURL = Bundle.main.appStoreReceiptURL,
+            FileManager.default.fileExists(atPath: appStoreReceiptURL.path) {
+                do {
+                    let receiptData = try Data(contentsOf: appStoreReceiptURL, options: .alwaysMapped)
+                    let receiptString = receiptData.base64EncodedString(options: [])
+                    print(receiptString)
+                    // send receiptString to api for check purchase
+                } catch {
+                    print("Couldn't read receipt data with error: " + error.localizedDescription)
+                }
+        }
     }
     
 }
