@@ -19,7 +19,11 @@ class ViewController: UIViewController, SKProductsRequestDelegate, SKPaymentTran
         super.viewDidLoad()
         
         let productIdentifiers = NSSet(objects:
-            "com.jfranco.gatetmp.coin"         // 0
+            "com.jfranco.gatetmp.coin250",
+            "com.jfranco.gatetmp.coin500",
+            "com.jfranco.gatetmp.coin1000",
+            "com.jfranco.gatetmp.sub1m",
+            "com.jfranco.gatetmp.sub3m"
         )
         
         productsRequest = SKProductsRequest(productIdentifiers: productIdentifiers as! Set<String>)
@@ -30,7 +34,7 @@ class ViewController: UIViewController, SKProductsRequestDelegate, SKPaymentTran
     @IBAction func purchaseCoins(_ sender: Any) {
         // this func must be called after product response
         // can be guarded, just an ex
-        productIndex = 0
+        productIndex = 3
         purchaseMyProduct(validProducts[productIndex])
     }
     
@@ -41,10 +45,11 @@ class ViewController: UIViewController, SKProductsRequestDelegate, SKPaymentTran
     func productsRequest (_ request:SKProductsRequest, didReceive response: SKProductsResponse) {
         if response.products.count > 0 {
             validProducts = response.products
-            let twoKCoins = response.products[0] as SKProduct
-            print("1st rpoduct: " + twoKCoins.localizedDescription)
+            for product in response.products {
+                print(product.localizedTitle, product.localizedDescription)
+            }
         } else {
-            print("no product")
+            print("No products")
         }
     }
     
@@ -56,10 +61,7 @@ class ViewController: UIViewController, SKProductsRequestDelegate, SKPaymentTran
                 switch trans.transactionState {
                 case .purchased:
                     SKPaymentQueue.default().finishTransaction(transaction as! SKPaymentTransaction)
-                    if productIndex == 0 {
-                        print("You've bought 2000 coins!")
-                        fetchReceipt()
-                    }
+                    fetchReceipt()
                     break
                 case .failed:
                     SKPaymentQueue.default().finishTransaction(transaction as! SKPaymentTransaction)
@@ -67,7 +69,7 @@ class ViewController: UIViewController, SKProductsRequestDelegate, SKPaymentTran
                     break
                 case .restored:
                     SKPaymentQueue.default().finishTransaction(transaction as! SKPaymentTransaction)
-                    print("Purchase has been successfully restored!")
+                    fetchReceipt()
                     break
                 default: break
         }}}
@@ -86,6 +88,7 @@ class ViewController: UIViewController, SKProductsRequestDelegate, SKPaymentTran
     func restorePurchase() {
         SKPaymentQueue.default().add(self as SKPaymentTransactionObserver)
         SKPaymentQueue.default().restoreCompletedTransactions()
+        fetchReceipt()
     }
         
     func paymentQueueRestoreCompletedTransactionsFinished(_ queue: SKPaymentQueue) {
