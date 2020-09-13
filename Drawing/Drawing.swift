@@ -10,61 +10,60 @@ import UIKit
 
 class DrawView: UIView {
     
-    private var lineArray: [[CGPoint]] = [[CGPoint]]()
+    private var lineArray = [Line]()
+    private var strokeColor = UIColor.black
+    private var strokeWidth: Float = 5.0
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        guard let touch = touches.first else {
-            return
-        }
-        
-        let firstPoint = touch.location(in: self)
-        
-        lineArray.append([CGPoint]())
-        lineArray[lineArray.count - 1].append(firstPoint)
+        lineArray.append(Line.init(strokeWidth: strokeWidth, color: strokeColor, points: []))
     }
     
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
-        guard let touch = touches.first else {
-            return
-        }
-        
-        let currentPoint = touch.location(in: self)
-        lineArray[lineArray.count - 1].append(currentPoint)
+        guard let point = touches.first?.location(in: nil) else { return }
+        guard var lastLine = lineArray.popLast() else { return }
+        lastLine.points.append(point)
+        lineArray.append(lastLine)
         setNeedsDisplay()
     }
     
     override func draw(_ rect: CGRect) {
-        guard let context = UIGraphicsGetCurrentContext() else {
-            return
-        }
-        
+        guard let context = UIGraphicsGetCurrentContext() else { return }
         draw(inContext: context)
     }
     
     func draw(inContext context: CGContext) {
-        context.setLineWidth(5)
-        context.setStrokeColor(UIColor.black.cgColor)
-        context.setLineCap(.round)
-        
-        for line in lineArray {
-            guard let firstPoint = line.first else {
-                continue
-            }
-            
-            context.beginPath()
-            context.move(to: firstPoint)
-
-            for point in line.dropFirst() {
-                context.addLine(to: point)
+        lineArray.forEach { (line) in
+            context.setStrokeColor(line.color.cgColor)
+            context.setLineWidth(CGFloat(line.strokeWidth))
+            context.setLineCap(.round)
+            for (i, p) in line.points.enumerated() {
+                if i == 0 {
+                    context.move(to: p)
+                } else {
+                    context.addLine(to: p)
+                }
             }
             
             context.strokePath()
         }
     }
     
-    func resetDrawing() {
-        lineArray = []
+    func undo() {
+        _ = lineArray.popLast()
         setNeedsDisplay()
+    }
+    
+    func clear() {
+        lineArray.removeAll()
+        setNeedsDisplay()
+    }
+    
+    func setStrokeWidth(width: Float) {
+        self.strokeWidth = width
+    }
+    
+    func setStrokeColor(color: UIColor) {
+        self.strokeColor = color
     }
     
     func exportDrawing() -> UIImage? {
